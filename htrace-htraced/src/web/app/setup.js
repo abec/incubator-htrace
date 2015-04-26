@@ -28,6 +28,7 @@ var BaseView = Backbone.Marionette.LayoutView.extend({
 var Router = Backbone.Marionette.AppRouter.extend({
   "routes": {
     "": "init",
+    "!/about": "about",
     "!/search(?:query)": "search",
     "!/spans/:id": "span",
     "!/swimlane/:id": "swimlane",
@@ -37,10 +38,20 @@ var Router = Backbone.Marionette.AppRouter.extend({
   "initialize": function() {
     // Collection
     this.spansCollection = new app.Spans();
+    this.serverInfo = new app.ServerInfo();
   },
 
   "init": function() {
     Backbone.history.navigate("!/search", {"trigger": true});
+  },
+
+  "about": function() {
+    var serverInfo = this.serverInfo;
+    this.serverInfo.fetch({"success": function() {
+      app.root.app.show(new app.AboutView({
+        "model" : serverInfo
+      }));
+    }})
   },
 
   "search": function(query) {

@@ -41,9 +41,12 @@
         <div class="collapse navbar-collapse">
           <a class="navbar-brand" href="#">HTrace</a>
 
-          <ul class="nav navbar-nav">
-            <li class="active"><a href="/">Search</a></li>
-          </ul>
+          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+              <li><a href="#!/about">About</a></li>
+              <li><a href="#!/search">Search</a></li>
+            </ul>
+          </div>
         </div>
       </nav>
     </header>
@@ -51,6 +54,12 @@
     <div id="app" class="container-fluid" role="application"></div>
 
     <footer></footer>
+
+    <script id="about-layout-template" type="text/html">
+    <div class="container-fluid" id="list" role="application">
+      <h1>HTrace <%- ReleaseVersion %></h1>
+    </div>
+    </script>
 
     <script id="search-layout-template" type="text/html">
     <div class="container-fluid" id="list" role="application">
@@ -189,7 +198,9 @@
     <script src="lib/rome-2.1.0/rome.standalone.min.js" type="text/javascript"></script>
 
     <script src="app/app.js" type="text/javascript"></script>
+    <script src="app/models/server_info.js" type="text/javascript"></script>
     <script src="app/models/span.js" type="text/javascript"></script>
+    <script src="app/views/about/about.js" type="text/javascript"></script>
     <script src="app/views/graph/graph.js" type="text/javascript"></script>
     <script src="app/views/search/field.js" type="text/javascript"></script>
     <script src="app/views/search/search.js" type="text/javascript"></script>
