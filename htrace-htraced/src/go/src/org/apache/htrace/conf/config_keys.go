@@ -45,13 +45,13 @@ const HTRACED_CONF_DIR = "HTRACED_CONF_DIR"
 const HTRACE_WEB_ADDRESS = "web.address"
 
 // The default port for the Htrace web address.
-const HTRACE_WEB_ADDRESS_DEFAULT_PORT = 9095
+const HTRACE_WEB_ADDRESS_DEFAULT_PORT = 9096
 
 // The web address to start the REST server on.
 const HTRACE_HRPC_ADDRESS = "hrpc.address"
 
 // The default port for the Htrace HRPC address.
-const HTRACE_HRPC_ADDRESS_DEFAULT_PORT = 9075
+const HTRACE_HRPC_ADDRESS_DEFAULT_PORT = 9076
 
 // The directories to put the data store into.  Separated by PATH_LIST_SEP.
 const HTRACE_DATA_STORE_DIRECTORIES = "data.store.directories"
@@ -77,8 +77,8 @@ const HTRACE_STARTUP_NOTIFICATION_ADDRESS = "startup.notification.address"
 var DEFAULTS = map[string]string{
 	HTRACE_WEB_ADDRESS:  fmt.Sprintf("0.0.0.0:%d", HTRACE_WEB_ADDRESS_DEFAULT_PORT),
 	HTRACE_HRPC_ADDRESS: fmt.Sprintf("0.0.0.0:%d", HTRACE_HRPC_ADDRESS_DEFAULT_PORT),
-	HTRACE_DATA_STORE_DIRECTORIES: PATH_SEP + "tmp" + PATH_SEP + "htrace1" +
-		PATH_LIST_SEP + PATH_SEP + "tmp" + PATH_SEP + "htrace2",
+	HTRACE_DATA_STORE_DIRECTORIES: PATH_SEP + "tmp" + PATH_SEP + "htrace21" +
+		PATH_LIST_SEP + PATH_SEP + "tmp" + PATH_SEP + "htrace22",
 	HTRACE_DATA_STORE_CLEAR:            "false",
 	HTRACE_DATA_STORE_SPAN_BUFFER_SIZE: "100",
 	HTRACE_LOG_PATH:                    "",

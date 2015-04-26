@@ -18,3 +18,9 @@
  */
 
 window.app = new Marionette.Application();
+
+window.Behaviors = {};
+
+Backbone.Marionette.Behaviors.behaviorsLookup = function() {
+  return window.Behaviors;
+}

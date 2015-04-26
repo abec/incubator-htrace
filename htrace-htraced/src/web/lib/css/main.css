@@ -17,14 +17,19 @@
  * under the License.
  */
 
+/* Search list */
 ul.spans {
+  list-style: none;
   margin: 0px;
   padding: 0px;
 }
 
-li.span {
-  margin: 0px;
+li.spans {
   list-style: none;
+}
+
+div.span {
+  padding: 5px;
 }
 
 /* Graph */

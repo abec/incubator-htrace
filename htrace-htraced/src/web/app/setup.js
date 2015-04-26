@@ -59,11 +59,6 @@ var Router = Backbone.Marionette.AppRouter.extend({
 
     var predicates;
 
-    this.spansCollection.switchMode("infinite", {
-      fetch: false,
-      resetState: true
-    });
-
     if (query) {
       predicates = _(query.split(";"))
       .map(function(predicate) {
@@ -74,14 +69,12 @@ var Router = Backbone.Marionette.AppRouter.extend({
             return mem;
           }, {});
       });
-      this.spansCollection.fullCollection.reset();
       this.spansCollection.setPredicates(predicates);
-    }
-    else {
-      this.spansCollection.fullCollection.reset();
+      this.spansCollection.fetch({"remove": false});
+    } else {
       this.spansCollection.setPredicates([{"op":"cn","field":"description","val":""}]);
+      this.spansCollection.fetch();
     }
-    this.spansCollection.fetch();
 
     app.root.app.currentView.controls.show(
       new app.SearchControlsView({
@@ -89,71 +82,76 @@ var Router = Backbone.Marionette.AppRouter.extend({
         "predicates": predicates
       }));
     app.root.app.currentView.main.show(
-      new Backgrid.Grid({
+      new app.SearchListView({
         "collection": this.spansCollection,
-        "columns": [{
-          "label": "Begin",
-          "cell": Backgrid.Cell.extend({
-            className: "begin-cell",
-            formatter: {
-              fromRaw: function(rawData, model) {
-                var beginMs = model.get("beginTime")
-                return moment(beginMs).format('YYYY/MM/DD HH:mm:ss,SSS');
-              },
-              toRaw: function(formattedData, model) {
-                return formattedData // data entry not supported for this cell
-              }
-            }
-          }),
-          "editable": false,
-          "sortable": false
-        }, {
-          "name": "spanId",
-          "label": "ID",
-          "cell": "string",
-          "editable": false,
-          "sortable": false
-        }, {
-          "name": "processId",
-          "label": "processId",
-          "cell": "string",
-          "editable": false,
-          "sortable": false
-        }, {
-          "label": "Duration",
-          "cell": Backgrid.Cell.extend({
-            className: "duration-cell",
-            formatter: {
-              fromRaw: function(rawData, model) {
-                return model.duration() + " ms"
-              },
-              toRaw: function(formattedData, model) {
-                return formattedData // data entry not supported for this cell
-              }
-            }
-          }),
-          "editable": false,
-          "sortable": false
-        }, {
-          "name": "description",
-          "label": "Description",
-          "cell": "string",
-          "editable": false,
-          "sortable": false
-        }],
-        "row": Backgrid.Row.extend({
-          "events": {
-            "click": "details"
-          },
-          "details": function() {
-            Backbone.history.navigate("!/spans/" + this.model.get("spanId"), {"trigger": true});
-          }
-        })
       }));
-    app.root.app.currentView.pagination.show(
-      new Backgrid.Extension.Paginator({
-        collection: this.spansCollection,
-      }));
+
+    // app.root.app.currentView.main.show(
+    //   new Backgrid.Grid({
+    //     "collection": this.spansCollection,
+    //     "columns": [{
+    //       "label": "Begin",
+    //       "cell": Backgrid.Cell.extend({
+    //         className: "begin-cell",
+    //         formatter: {
+    //           fromRaw: function(rawData, model) {
+    //             var beginMs = model.get("beginTime")
+    //             return moment(beginMs).format('YYYY/MM/DD HH:mm:ss,SSS');
+    //           },
+    //           toRaw: function(formattedData, model) {
+    //             return formattedData // data entry not supported for this cell
+    //           }
+    //         }
+    //       }),
+    //       "editable": false,
+    //       "sortable": false
+    //     }, {
+    //       "name": "spanId",
+    //       "label": "ID",
+    //       "cell": "string",
+    //       "editable": false,
+    //       "sortable": false
+    //     }, {
+    //       "name": "processId",
+    //       "label": "processId",
+    //       "cell": "string",
+    //       "editable": false,
+    //       "sortable": false
+    //     }, {
+    //       "label": "Duration",
+    //       "cell": Backgrid.Cell.extend({
+    //         className: "duration-cell",
+    //         formatter: {
+    //           fromRaw: function(rawData, model) {
+    //             return model.duration() + " ms"
+    //           },
+    //           toRaw: function(formattedData, model) {
+    //             return formattedData // data entry not supported for this cell
+    //           }
+    //         }
+    //       }),
+    //       "editable": false,
+    //       "sortable": false
+    //     }, {
+    //       "name": "description",
+    //       "label": "Description",
+    //       "cell": "string",
+    //       "editable": false,
+    //       "sortable": false
+    //     }],
+    //     "row": Backgrid.Row.extend({
+    //       "events": {
+    //         "click": "details"
+    //       },
+    //       "details": function() {
+    //         Backbone.history.navigate("!/spans/" + this.model.get("spanId"), {"trigger": true});
+    //       }
+    //     })
+    //   }));
+    // app.root.app.currentView.pagination.show(
+    //   new Backgrid.Extension.Paginator({
+    //     collection: this.spansCollection,
+    //   }));
   },
 
   "span": function(id) {

@@ -244,17 +244,9 @@ backbone, is a javascript library, that is Copyright (c) 2010-2014
 Jeremy Ashkenas, DocumentCloud. It is MIT licensed:
 https://github.com/jashkenas/backbone/blob/master/LICENSE
 
-backbone-paginator, is a javascript library, that is Copyright (c) 2012-2014
-Jimmy Yuen Ho Wong and contributors. It is MIT licensed:
-https://github.com/backbone-paginator/backbone.paginator/blob/master/LICENSE-MIT
-
-backgrid, is a javascript library, that is Copyright (c) 2013
-Jimmy Yuen Ho Wong. It is MIT licensed:
-https://github.com/wyuenho/backgrid/blob/master/LICENSE-MIT
-
-backgrid-paginator, is a javascript library, that is Copyright (c) 2013
-Jimmy Yuen Ho Wong. It is MIT licensed:
-https://github.com/wyuenho/backgrid-paginator/blob/master/LICENSE-MIT
+Backbone.Mutators, is a javascript library, that is Copyright (c) 2015
+Sebastian Golasch. It is MIT licensed:
+https://github.com/asciidisco/Backbone.Mutators/blob/master/Gruntfile.js#L101
 
 moment.js is a front end time conversion project.
 It is (c) 2011-2014 Tim Wood, Iskren Chernev, Moment.js contributors

@@ -17,12 +17,34 @@
  * under the License.
  */
 
+app.TemplateHelpers || (app.TemplateHelpers = {});
+_.extend(app.TemplateHelpers, {
+  "dateTime": function(timestamp){
+    return moment(timestamp).format("YYYY/MM/DD HH:mm:ss SSS");
+  }
+});
+
+app.SpanModalView = Backbone.Marionette.Region.extend({
+  onShow: function() {
+    this.$el.modal('show');
+  }
+});
+
 app.SearchView = Backbone.Marionette.LayoutView.extend({
   "template": "#search-layout-template",
   "regions": {
     "controls": "div[role='form']",
     "main": "div[role='main']",
-    "pagination": "div[role='complementary']"
+    "pagination": "div[role='complementary']",
+    "modal": {
+      selector: "#search-item-modal",
+      regionClass: app.SpanModalView
+    }
+  },
+  "childEvents": {
+    "show:modal": function(childView, view) {
+      this.modal.show(view);
+    }
   }
 });
 
@@ -92,14 +114,124 @@ app.SearchControlsView = Backbone.Marionette.View.extend({
     }).join(';');
     Backbone.history.navigate('!/search?' + this.searchParams, { trigger: false });
 
-    this.collection.switchMode("infinite", {
-      fetch: false,
-      resetState: true
-    });
-
-    this.collection.fullCollection.reset();
     this.collection.setPredicates(this.predicates);
     this.collection.fetch();
     return false;
+  }
+});
+
+app.SearchListItemInfoView = Backbone.Marionette.ItemView.extend({
+  "template": "#search-list-item-info-template",
+  "templateHelpers": app.TemplateHelpers,
+  "serializeData": function() {
+    return {
+      "item": this.model.toJSON()
+    }
+  },
+  "onRender": function() {
+    $(this.$el).find("pre").each(function(i, block) {
+      hljs.highlightBlock(block);
+    });
+  }
+});
+
+app.SearchSublistItemView = Backbone.Marionette.LayoutView.extend({
+  "template": "#search-sublist-item-template",
+  "templateHelpers": app.TemplateHelpers,
+  "tagName": "li",
+  "className": "span",
+  "regions": {
+    "parents": ".span-parents",
+    "children": ".span-children"
+  },
+  "behaviors": {
+    "modal": {
+      "viewClass": app.SearchListItemInfoView,
+      "btn": ".info-btn"
+    },
+    "showParents": {
+      "region": "parents",
+      "emptyMessage": "No parents.",
+      "btn": ".parents-btn",
+      "extraOptions": {
+        "showParentsBtn": true
+      },
+      "getCollectionClass": function() {
+        return app.Spans;
+      },
+      "getViewClass": function() {
+        return app.SearchSublistView;
+      },
+      "getPromise": function(behavior) {
+        return behavior.view.model.findParents();
+      }
+    },
+    "showChildren": {
+      "region": "children",
+      "emptyMessage": "No children.",
+      "btn": ".children-btn",
+      "extraOptions": {
+        "showChildrenBtn": true
+      },
+      "getCollectionClass": function() {
+        return app.Spans;
+      },
+      "getViewClass": function() {
+        return app.SearchSublistView;
+      },
+      "getPromise": function(behavior) {
+        return behavior.view.model.findChildren();
+      }
+    }
+  },
+  // Bubble up show modal event.
+  "childEvents": {
+    "show:modal": function(childView, view) {
+      this.triggerMethod('show:modal', view);
+    }
+  },
+  "initialize": function(options) {
+    options || (options = {});
+
+    this.model.on("change", this.render, this);
+
+    this.showChildrenBtn = options.showChildrenBtn;
+    this.showParentsBtn = options.showParentsBtn;
+  },
+  "serializeData": function() {
+    return {
+      "item": this.model.toJSON(),
+      "showParentsBtn": this.showParentsBtn,
+      "showChildrenBtn": this.showChildrenBtn
+    };
+  }
+});
+
+app.SearchSublistView = Backbone.Marionette.CollectionView.extend({
+  "tagName": "ul",
+  "className": "list-group spans",
+  "childView": app.SearchSublistItemView,
+  "childViewOptions": function(model, index) {
+    return {
+      "showChildrenBtn": this.options.showChildrenBtn,
+      "showParentsBtn": this.options.showParentsBtn
+    };
+  }
+});
+
+app.SearchListItemView = app.SearchSublistItemView.extend({
+  "template": "#search-list-item-template"
+});
+
+app.SearchListView = Backbone.Marionette.CollectionView.extend({
+  "tagName": "ul",
+  "className": "list-group spans",
+  "childView": app.SearchListItemView,
+  "serializeData": function() {
+    return {
+      "item": this.model.toJSON(),
+      "showParentsBtn": true,
+      "showChildrenBtn": true
+    };
   }
 });

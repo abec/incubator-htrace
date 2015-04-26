@@ -17,7 +17,10 @@
  * under the License.
  */
 
+// @TODO(Abe): Re-work caching.
 // Span model
+app.SpanCache = {};
+
 app.Span = Backbone.Model.extend({
   "defaults": {
     "spanId": null,
@@ -26,10 +29,15 @@ app.Span = Backbone.Model.extend({
     "parents": null,
     "description": null,
     "beginTime": 0,
-    "stopTime": 0
+    "stopTime": 0,
+    "children": []
   },
 
-  shorthand: {
+  "url": function() {
+    return "/span/" + this.get("spanId")
+  },
+
+  "shorthand": {
     "s": "spanId",
     "b": "beginTime",
     "e": "stopTime",
@@ -39,7 +47,20 @@ app.Span = Backbone.Model.extend({
     "i": "traceId"
   },
 
-  parse: function(response, options) {
+  "mutators": {
+    "duration": function() {
+      return this.get('stopTime') - this.get('beginTime');
+    }
+  },
+
+  "initialize": function() {
+    // Only add to cache if doesn't exist
+    if (!app.SpanCache[this.get("spanId")]) {
+      app.SpanCache[this.get("spanId")] = this;
+    }
+  },
+
+  "parse": function(response, options) {
     var attrs = {};
     var $this = this;
     $.each(response, function(key, value) {
@@ -48,58 +69,93 @@ app.Span = Backbone.Model.extend({
     return attrs;
   },
 
-  duration: function() {
-    return this.get('stopTime') - this.get('beginTime');
+  "_findSpans": function(spanIds) {
+    var deferred = $.Deferred();
+
+    // Check cache for existing model
+    var spans = $.map(spanIds, function(spanId) {
+      if (!app.SpanCache[spanId]) {
+        return new app.Span({
+          "spanId": spanId
+        });
+      } else {
+        return app.SpanCache[spanId];
+      }
+    });
+
+    // Check cache and fetch if not in cache
+    var ajaxRequests = $.map(spans, function(span) {
+      if (app.SpanCache[span.get("spanId")]) {
+        var deferred = $.Deferred();
+        deferred.resolve(app.SpanCache[span.get("spanId")]);
+        return deferred.promise();
+      } else {
+        return span.fetch();
+      }
+    });
+
+    $.when.apply($, ajaxRequests)
+      .done(function() {
+        if (spans) {
+          // Create list of spans
+          deferred.resolve(spans);
+        } else {
+          // Create list of spans
+          deferred.resolve([]);
+        }
+      })
+      .fail(function() {
+        deferred.reject();
+      });
+
+    return deferred.promise();
+  },
+
+  "findParents": function() {
+    if (this.get("parents")) {
+      return this._findSpans(this.get("parents"));
+    } else {
+      return $.when();
+    }
+  },
+
+  "findChildren": function() {
+    var $this = this;
+    var deferred = $.Deferred();
+
+    var fail = function() {
+      deferred.reject();
+    };
+
+    // Requires 2 levels of ajax calls
+    // First fetch children span Ids
+    // Then fetch full spans from span Id
+    $.ajax({
+      "url": this.url() + "/children",
+      "data": {
+        "lim": 100
+      }
+    })
+    .done(function(children) {
+      $this._findSpans(children)
+        .done(function() {
+          deferred.resolve.apply(deferred, arguments);
+        })
+        .fail(fail);
+    })
+    .fail(fail);
+
+    return deferred.promise();
   }
 });
 
-app.Spans = Backbone.PageableCollection.extend({
+app.Spans = Backbone.Collection.extend({
   model: app.Span,
-  mode: "infinite",
   url: "/query",
   state: {
     pageSize: 10,
-    lastSpanId: null,
     finished: false,
     predicates: []
-  },
-  queryParams: {
-    totalPages: null,
-    totalRecords: null,
-    firstPage: null,
-    lastPage: null,
-    currentPage: null,
-    pageSize: null,
-    sortKey: null,
-    order: null,
-    directions: null,
-
-    /**
-     * Query parameter for htraced.
-     */
-    query: function() {
-      var predicates = this.state.predicates.slice(0);
-      var lastSpanId = this.state.lastSpanId;
-
-      /**
-       * Use last pulled span ID to paginate.
-       * The htraced API works such that order is defined by the first predicate.
-       * Adding a predicate to the end of the predicates list won't change the order.
-       * Providing the predicate on spanid will filter all previous spanids.
-       */
-      if (lastSpanId) {
-        predicates.push({
-          "op": "gt",
-          "field": "spanid",
-          "val": lastSpanId
-        });
-      }
-
-      return JSON.stringify({
-        lim: this.state.pageSize + 1,
-        pred: predicates
-      });
-    }
   },
 
   initialize: function() {
@@ -111,25 +167,46 @@ app.Spans = Backbone.PageableCollection.extend({
     }, this);
   },
 
-  parseLinks: function(resp, xhr) {
-    this.state.finished = resp.length <= this.state.pageSize;
+  /**
+   * Use last pulled span ID to paginate.
+   * The htraced API works such that order is defined by the first predicate.
+   * Adding a predicate to the end of the predicates list won't change the order.
+   * Providing the predicate on spanid will filter all previous spanids.
+   *
+   * Also, fetch an extra span so that we can paginate appropriately.
+   */
+  fetch: function(options) {
+    options || (options = {});
+    options.data || (options.data = {});
 
-    if (this.state.finished) {
-      this.state.lastSpanId = null;
-    } else {
-      this.state.lastSpanId = resp[this.state.pageSize - 1].s;
+    if (!options.data.query) {
+      var predicates = this.state.predicates.slice(0);
+      var lastSpanId = this.state.lastSpanId;
+
+      if (lastSpanId) {
+        predicates.push({
+          "op": "gt",
+          "field": "spanid",
+          "val": lastSpanId
+        });
+      }
+
+      options.data.query = JSON.stringify({
+        lim: this.state.pageSize + 1,
+        pred: predicates
+      });
     }
 
-    if (this.state.finished) {
-      return {};
-    }
-
-    return {
-      "next": "/query?query=" + this.queryParams.query.call(this)
-    };
+    Backbone.Model.prototype.fetch.call(this, options);
   },
 
-  parseRecords: function(resp) {
+  /**
+   * Extra span fetched needs to be removed.
+   * If there's more than the desired spans (if the extra exists),
+   * then we have more spans to fetch. Otherwise, we're finished.
+   */
+  parse: function(resp) {
+    this.state.finished = resp.length <= this.state.pageSize;
     return resp.slice(0, 10);
   },
 

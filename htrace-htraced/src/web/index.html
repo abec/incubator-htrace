@@ -25,8 +25,8 @@
     <!-- TODO: Add Favicon -->
     <link rel="icon" href="//favicon.ico" type="image/x-icon" sizes="16x16">
     <link href="lib/bootstrap-3.3.1/css/bootstrap.css" rel="stylesheet">
-    <link href="lib/css/backgrid-0.3.5.min.css" rel="stylesheet">
-    <link href="lib/css/backgrid-paginator-0.3.5.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/styles/default.min.css">
     <link href="lib/rome-2.1.0/rome.min.css" rel="stylesheet">
     <link href="lib/css/main.css" rel="stylesheet">
 
@@ -41,12 +41,9 @@
         <div class="collapse navbar-collapse">
           <a class="navbar-brand" href="#">HTrace</a>
 
-          <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-            <ul class="nav navbar-nav">
-              <li><a href="#!/about">About</a></li>
-              <li><a href="#!/search">Search</a></li>
-            </ul>
-          </div>
+          <ul class="nav navbar-nav">
+            <li><a href="/">Search</a></li>
+          </ul>
         </div>
       </nav>
     </header>
@@ -55,13 +52,9 @@
 
     <footer></footer>
 
-    <script id="about-layout-template" type="text/html">
-    <div class="container-fluid" id="list" role="application">
-      <h1>HTrace <%- ReleaseVersion %></h1>
-    </div>
-    </script>
-
     <script id="search-layout-template" type="text/html">
+    <div id="search-item-modal" class="modal fade" role="complementary"></div>
+
     <div class="container-fluid" id="list" role="application">
       <div class="row">
         <div class="col-md-4" role="form"></div>
@@ -75,6 +68,72 @@
         </div>
       </div>
     </div>
+    </script>
+
+    <script id="search-list-item-template" type="text/html">
+    <div class="panel panel-default">
+      <div class="collapse span-parents"></div>
+
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <div class="pull-left">
+            <a href="javascript:void(0)" class="parents-btn" data-toggle="collapse" aria-expanded="false" aria-controls="<%- item.spanId %>-parents" title="parents"><i class="fa fa-arrow-up"></i></a>&nbsp;
+            <a href="javascript:void(0)" class="children-btn <%= (!item.children || item.children.length == 0) ? 'disabled' : '' %>" data-toggle="collapse" aria-expanded="false" aria-controls="<%- item.spanId %>-children" title="children"><i class="fa fa-arrow-down"></i></a>&nbsp;
+          </div>
+          <div class="pull-left">
+            <a href="javascript:void(0);" class="info-btn">
+              <mark><%- item.processId %> - <%- item.description %></mark>
+            </a>
+          </div>
+          <div class="clearfix"></div>
+        </h3>
+      </div>
+
+      <div class="collapse span-children"></div>
+    </div>
+    </script>
+
+    <script id="search-sublist-item-template" type="text/html">
+    <div class="span">
+      <% if (showParentsBtn) { %>
+      <div class="collapse span-parents"></div>
+      <% } %>
+
+      <div class="span-details">
+        <div class="pull-left">
+          <% if (showParentsBtn) { %>
+          <a href="javascript:void(0)" class="parents-btn" data-toggle="collapse" aria-expanded="false" aria-controls="<%- item.spanId %>-parents" title="parents"><i class="fa fa-arrow-up"></i></a>&nbsp;
+          <% } %>
+          <% if (showChildrenBtn) { %>
+          <a href="javascript:void(0)" class="children-btn" data-toggle="collapse" aria-expanded="false" aria-controls="<%- item.spanId %>-children" title="children"><i class="fa fa-arrow-down"></i></a>&nbsp;
+          <% } %>
+        </div>
+        <div class="pull-left">
+          <a href="javascript:void(0);" class="info-btn">
+            <mark><%- item.processId %> - <%- item.description %></mark>
+          </a>
+        </div>
+        <div class="clearfix"></div>
+      </div>
+
+      <% if (showChildrenBtn) { %>
+      <div class="collapse span-children"></div>
+      <% } %>
+    </div>
+    </script>
+
+    <script id="search-list-item-info-template" type="text/html">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title"><%- item.processId %> - <%- item.description %></h4>
+          </div>
+          <div class="modal-body">
+              <pre class="json"><%- JSON.stringify(item, null, 2) %></pre>
+          </div>
+        </div>
+      </div>
     </script>
 
     <script id="search-controls-template" type="text/html">
@@ -191,17 +250,18 @@
     <script src="lib/js/underscore-1.7.0.js" type="text/javascript"></script>
     <script src="lib/js/backbone-1.1.2.js" type="text/javascript"></script>
     <script src="lib/js/backbone.marionette-2.4.1.min.js" type="text/javascript"></script>
-    <script src="lib/js/backbone.paginator-2.0.2.js" type="text/javascript"></script>
-    <script src="lib/js/backgrid-0.3.5.js" type="text/javascript"></script>
-    <script src="lib/js/backgrid-paginator-0.3.5.js" type="text/javascript"></script>
+    <script src="lib/js/backbone.mutators-0.4.5.js" type="text/javascript"></script>
     <script src="lib/js/moment-2.9.0.min.js" type="text/javascript"></script>
     <script src="lib/rome-2.1.0/rome.standalone.min.js" type="text/javascript"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.5/highlight.min.js"></script>
+    <script type="text/javascript">hljs.initHighlightingOnLoad();</script>
 
     <script src="app/app.js" type="text/javascript"></script>
     <script src="app/models/server_info.js" type="text/javascript"></script>
     <script src="app/models/span.js" type="text/javascript"></script>
     <script src="app/views/about/about.js" type="text/javascript"></script>
     <script src="app/views/graph/graph.js" type="text/javascript"></script>
+    <script src="app/views/search/behaviors.js" type="text/javascript"></script>
     <script src="app/views/search/field.js" type="text/javascript"></script>
     <script src="app/views/search/search.js" type="text/javascript"></script>
     <script src="app/views/details/details.js" type="text/javascript"></script>
