@@ -90,3 +90,21 @@ window.Behaviors.showChildren = showSublist.extend({
     "promise": $.when()
   },
 });
+
+window.Behaviors.swimlane = Backbone.Marionette.Behavior.extend({
+  "initialize": function(options) {
+    // this.view.model.on("change", this.resize, this);
+  },
+  "resize": function() {
+    var tmin = (this.options.tmin) ? this.options.tmin(this) : this.options.tmin;
+    var tmax = (this.options.tmax) ? this.options.tmax(this) : this.options.tmax;
+    var tmin = this.view.collection.min(function(model) {
+      return model.get("beginTime");
+    }).get("beginTime");
+    var tmax = this.view.collection.max(function(model) {
+      return model.get("stopTime");
+    }).get("stopTime");
+    // @TODO(Abe): if (tmin > tmax) tmax = tmix;
+
+  }
+});

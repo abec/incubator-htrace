@@ -54,6 +54,11 @@ app.Span = Backbone.Model.extend({
   },
 
   "initialize": function() {
+    // References to paren collection of parents and children.
+    // These are not backbone attributes so they should not be synced by default.
+    this.parents = null;
+    this.children = null;
+
     // Only add to cache if doesn't exist
     if (!app.SpanCache[this.get("spanId")]) {
       app.SpanCache[this.get("spanId")] = this;
@@ -113,7 +118,12 @@ app.Span = Backbone.Model.extend({
 
   "findParents": function() {
     if (this.get("parents")) {
-      return this._findSpans(this.get("parents"));
+      var $this = this;
+      var promise = $this._findSpans($this.get("parents"));
+      promise.done(function(spans) {
+        $this.parents = spans;
+      });
+      return promise;
     } else {
       return $.when();
     }
@@ -145,7 +155,11 @@ app.Span = Backbone.Model.extend({
     })
     .fail(fail);
 
-    return deferred.promise();
+    var promise = deferred.promise();
+    promise.done(function(spans) {
+      $this.children = spans;
+    });
+    return promise;
   }
 });
 

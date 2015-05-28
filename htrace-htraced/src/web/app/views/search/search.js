@@ -182,6 +182,14 @@ app.SearchSublistItemView = Backbone.Marionette.LayoutView.extend({
       "getPromise": function(behavior) {
         return behavior.view.model.findChildren();
       }
+    },
+    "swimlane": {
+      "tmin": function() {
+        return this.options.tmin;
+      },
+      "tmax": function() {
+        return this.options.tmax;
+      }
     }
   },
   // Bubble up show modal event.
@@ -194,15 +202,12 @@ app.SearchSublistItemView = Backbone.Marionette.LayoutView.extend({
     options || (options = {});
 
     this.model.on("change", this.render, this);
-
-    this.showChildrenBtn = options.showChildrenBtn;
-    this.showParentsBtn = options.showParentsBtn;
   },
   "serializeData": function() {
     return {
       "item": this.model.toJSON(),
-      "showParentsBtn": this.showParentsBtn,
-      "showChildrenBtn": this.showChildrenBtn
+      "showParentsBtn": this.options.showParentsBtn,
+      "showChildrenBtn": this.options.showChildrenBtn
     };
   }
 });
@@ -214,13 +219,29 @@ app.SearchSublistView = Backbone.Marionette.CollectionView.extend({
   "childViewOptions": function(model, index) {
     return {
       "showChildrenBtn": this.options.showChildrenBtn,
-      "showParentsBtn": this.options.showParentsBtn
+      "showParentsBtn": this.options.showParentsBtn,
+      "tmin": this.options.tmin,
+      "tmax": this.options.tmax
     };
   }
 });
 
+/**
+ * Mixture of search list and swimlane.
+ * 
+ */
 app.SearchListItemView = app.SearchSublistItemView.extend({
-  "template": "#search-list-item-template"
+  "template": "#search-list-item-template",
+  // "behaviors": $.extend({}, app.SearchSublistItemView.behaviors, {
+  //   "swimlane": {
+  //     "tmin": function() {
+  //       return this.options.tmin;
+  //     },
+  //     "tmax": function() {
+  //       return this.options.tmax;
+  //     }
+  //   }
+  // })
 });
 
 app.SearchListView = Backbone.Marionette.CollectionView.extend({
